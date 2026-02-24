@@ -2,8 +2,8 @@ package weather
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
+	"net/url"
 )
 
 const dev = true
@@ -46,9 +46,22 @@ func getLocationName(lat, long string) string {
 		} `json:"address"`
 	}
 
-	url := fmt.Sprintf("https://nominatim.openstreetmap.org/reverse?lat=%s&lon=%s&format=json&zoom=10", lat, long)
+	// Build URL.
+	u, err := url.Parse("https://nominatim.openstreetmap.org/reverse")
+	if err != nil {
+		panic("Error parsing URL: " + err.Error())
+	}
 
-	req, err := http.NewRequest("GET", url, nil)
+	// Add parameters.
+	q := u.Query()
+	q.Set("lat", lat)
+	q.Set("lon", long)
+	q.Set("format", "json")
+	q.Set("zoom", "10")
+	u.RawQuery = q.Encode()
+
+	// Make request.
+	req, err := http.NewRequest("GET", u.String(), nil)
 	if err != nil {
 		panic("Error creating request: " + err.Error())
 	}
@@ -67,6 +80,7 @@ func getLocationName(lat, long string) string {
 		panic("Error getting location data: " + res.Status)
 	}
 
+	// Read and parse.
 	var nominatim nominatimResponse
 	err = json.NewDecoder(res.Body).Decode(&nominatim)
 	if err != nil {
