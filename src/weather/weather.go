@@ -1,4 +1,4 @@
-package weatheracquireer
+package weather
 
 import "fmt"
 
@@ -30,11 +30,11 @@ const (
 	ForecastHourly
 )
 
-func New(long, lat string, f Forecast) *Weather {
+func New(lat, long string, f Forecast) *Weather {
 	w := &Weather{}
 
-	m := getWeatherFromMetNo(lat, long)
-	fmt.Printf("%f\n", m.Properties.Timeseries[0].Data.Instant.Details.AirTemperature)
+	m := getWeatherFromOpenMeteo(lat, long)
+	fmt.Printf("%f\n", m.Daily.Temperature2mMax[0])
 	
 	return w
 }

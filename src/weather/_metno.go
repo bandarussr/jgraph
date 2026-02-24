@@ -1,4 +1,4 @@
-package weatheracquireer
+package weather
 
 import (
 	"encoding/json"
