@@ -74,3 +74,24 @@ func getWeatherFromOpenMeteo(lat, long string) *openMeteoResponse {
 
 	return &weather
 }
+
+func convertIsoTimesToStrings(times []string) []string {
+	panic("Not implemented")
+}
+
+func (o *openMeteoResponse) toWeather() *Weather {
+	w := Weather{
+		Keys:            o.Hourly.Time,
+		TemperatureHigh: make(map[string]float32),
+		TemperatureLow:  make(map[string]float32),
+		Condition:       make(map[string]Condition),
+	}
+
+	for i, key := range o.Daily.Time {
+		w.TemperatureHigh[key] = o.Daily.Temperature2mMax[i]
+		w.TemperatureLow[key] = o.Daily.Temperature2mMin[i]
+		w.Condition[key] = Condition(o.Daily.WeatherCode[i])
+	}
+
+	return &w
+}

@@ -14,7 +14,7 @@ func main() {
 	}
 	
 	// Get weather information.
-	weather.New(os.Args[1], os.Args[2], weather.ForecastDaily)
-	
+	w := weather.New(os.Args[1], os.Args[2], weather.ForecastDaily)
+	fmt.Printf("%+v\n", w)
 	// Create jgraph view.
 }
