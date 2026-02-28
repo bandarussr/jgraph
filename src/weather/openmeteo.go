@@ -7,12 +7,14 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"slices"
 	"strings"
+	"time"
 )
 
 type openMeteoResponse struct {
 	// Hourly struct {
-	// 	Time                     []string  `json:"time"`
+	// Time                      []int     `json:"time"`
 	// 	Temperature2m            []float32 `json:"temperature_2m"`
 	// 	RelativeHumidity2m       []int     `json:"relative_humidity_2m"`
 	// 	PrecipitationProbability []int     `json:"precipitation_probability"`
@@ -21,7 +23,7 @@ type openMeteoResponse struct {
 	// 	WindDirection10m         []int     `json:"wind_direction_10m"`
 	// } `json:"hourly"`
 	Daily struct {
-		Time                        []string  `json:"time"`
+		Time                        []int     `json:"time"`
 		WeatherCode                 []int     `json:"weather_code"`
 		Temperature2mMin            []float32 `json:"temperature_2m_min"`
 		Temperature2mMax            []float32 `json:"temperature_2m_max"`
@@ -43,13 +45,13 @@ func getWeatherFromOpenMeteo(lat, long string) *openMeteoResponse {
 			}
 		}
 	}
-	
+
 	// Build URL.
 	u, err := url.Parse("https://api.open-meteo.com/v1/forecast")
 	if err != nil {
 		panic("Error parsing URL: " + err.Error())
 	}
-	
+
 	// Add parameters.
 	q := u.Query()
 	q.Set("latitude", lat)
@@ -58,7 +60,8 @@ func getWeatherFromOpenMeteo(lat, long string) *openMeteoResponse {
 	q.Set("wind_speed_unit", "mph")
 	q.Set("temperature_unit", "fahrenheit")
 	q.Set("precipitation_unit", "inch")
-	
+	q.Set("timeformat", "unixtime")
+
 	daily := []string{
 		"weather_code",
 		"temperature_2m_min",
@@ -68,7 +71,7 @@ func getWeatherFromOpenMeteo(lat, long string) *openMeteoResponse {
 		"wind_direction_10m_dominant",
 	}
 	q.Set("daily", strings.Join(daily, ","))
-	
+
 	// hourly := []string{
 	// 	"temperature_2m",
 	// 	"relative_humidity_2m",
@@ -102,7 +105,7 @@ func getWeatherFromOpenMeteo(lat, long string) *openMeteoResponse {
 	if err != nil {
 		panic("Error pasing weather data: " + err.Error())
 	}
-	
+
 	// Save data for development.
 	if dev {
 		err = os.WriteFile(".devdata.json", body, 0644)
@@ -114,19 +117,35 @@ func getWeatherFromOpenMeteo(lat, long string) *openMeteoResponse {
 	return &weather
 }
 
-func convertIsoTimesToStrings(times []string) []string {
-	panic("Not implemented")
+func convertIsoTimesToStrings(times []int, f ForecastType) []string {
+	today := time.Now()
+	timeStr := make([]string, len(times))
+	
+	for i, k := range times {
+		t := time.Unix(int64(k), 0)
+		
+		if t.Day() == today.Day() && t.Month() == today.Month() && t.Year() == today.Year() {
+			timeStr[i] = "Today"
+			continue
+		}
+		
+		timeStr[i] = t.Weekday().String()[:3]
+	}
+
+	return timeStr
 }
 
 func (o *openMeteoResponse) toWeather() *Weather {
 	w := Weather{
-		Keys:            o.Daily.Time,
+		Keys:            convertIsoTimesToStrings(o.Daily.Time, ForecastDaily),
+		MinTemperature:  slices.Min(o.Daily.Temperature2mMin),
+		MaxTemperature:  slices.Max(o.Daily.Temperature2mMax),
 		TemperatureHigh: make(map[string]float32),
 		TemperatureLow:  make(map[string]float32),
 		Condition:       make(map[string]Condition),
 	}
 
-	for i, key := range o.Daily.Time {
+	for i, key := range w.Keys {
 		w.TemperatureHigh[key] = o.Daily.Temperature2mMax[i]
 		w.TemperatureLow[key] = o.Daily.Temperature2mMin[i]
 		w.Condition[key] = Condition(o.Daily.WeatherCode[i])

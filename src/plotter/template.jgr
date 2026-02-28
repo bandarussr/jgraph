@@ -1,0 +1,20 @@
+newgraph
+X 8.5
+Y 11
+
+xaxis min {{.XMin}} max {{.XMax}} nodraw (* 20 75 *)
+yaxis min {{.YMin}} max {{.YMax}} nodraw (* -0.5 9.5 *)
+
+title fontsize 14 font Helvetica-Bold : {{.Location}} {{.ForecastType}} Forecast
+
+{{ $lowCol := .LowCol }}
+{{ $highCol := .HighCol }}
+{{ range .Forecast }}
+{{ $row := .Row }}
+{{ range .TempBar }}
+newcurve linetype solid linethickness 8 marktype none color {{.R}} {{.G}} {{.B}} pts {{.Start}} {{$row}} {{.End}} {{$row}}
+{{ end }}
+newstring x 19 y {{.Row}} hjr vjc fontsize 12 font Helvetica-Bold : {{.Key}}
+newstring x {{ $lowCol }} y {{.Row}} hjr vjc fontsize 10 font Helvetica : {{.Low}}
+newstring x {{ $highCol }} y {{.Row}} hjl vjc fontsize 10 font Helvetica : {{.High}}
+{{ end }}

@@ -11,6 +11,8 @@ const dev = true
 type Weather struct {
 	Location        string
 	Keys            []string
+	MinTemperature  float32
+	MaxTemperature  float32
 	TemperatureHigh map[string]float32
 	TemperatureLow  map[string]float32
 	Condition       map[string]Condition
@@ -26,14 +28,14 @@ const (
 	ConditionThunderstorm
 )
 
-type Forecast int
+type ForecastType int
 
 const (
-	ForecastDaily Forecast = iota
+	ForecastDaily ForecastType = iota
 	ForecastHourly
 )
 
-func New(lat, long string, f Forecast) *Weather {
+func New(lat, long string, f ForecastType) *Weather {
 	w := getWeatherFromOpenMeteo(lat, long).toWeather()
 	w.Location = getLocationName(lat, long)
 	return w

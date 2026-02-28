@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/bandarussr/jgraph/src/plotter"
 	"github.com/bandarussr/jgraph/src/weather"
 )
 
@@ -15,6 +16,8 @@ func main() {
 	
 	// Get weather information.
 	w := weather.New(os.Args[1], os.Args[2], weather.ForecastDaily)
-	fmt.Printf("%+v\n", w)
+	
 	// Create jgraph view.
+	j := plotter.New(*w)
+	j.Plot("test.jgr")
 }
