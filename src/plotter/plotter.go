@@ -11,10 +11,9 @@ import (
 //go:embed template.jgr
 var jgr_template string
 
-const XMin float32 = 20
-const XMax float32 = 75
-const YMin float32 = -0.5
-const YMax float32 = 9.5
+const XMin float32 = 0
+const XMax float32 = 100
+const YMin float32 = -1
 
 type JGraph struct {
 	XMin float32
@@ -22,19 +21,25 @@ type JGraph struct {
 	YMin float32
 	YMax float32
 
-	LowCol  float32
-	HighCol float32
+	TitleY       float32
+	DayCol       float32
+	ConditionCol float32
+	LowCol       float32
+	HighCol      float32
+	TempBarMin   float32
+	TempBarMax   float32
 
-	Location     string
-	Forecast     []Forecast
+	Location string
+	Forecast []Forecast
 }
 
 type Forecast struct {
-	Key     string
-	Row     float32
-	Low     int
-	High    int
-	TempBar []TempBar
+	Key       string
+	Row       float32
+	Low       int
+	High      int
+	TempBar   []TempBar
+	Condition string
 }
 
 type TempBar struct {
@@ -46,17 +51,33 @@ type TempBar struct {
 }
 
 func New(w weather.Weather) *JGraph {
+	tempBarBuffer := float32(3)
+
 	j := &JGraph{
 		XMin: XMin,
 		XMax: XMax,
 		YMin: YMin,
-		YMax: YMax,
+		YMax: float32(len(w.Keys)),
 
-		LowCol:  27,
-		HighCol: 69,
+		TitleY:       7,
+		DayCol:       -25,
+		ConditionCol: -15,
+		LowCol:       -1,
+		HighCol:      101,
+		TempBarMin:   XMin + tempBarBuffer,
+		TempBarMax:   XMax - tempBarBuffer,
 
-		Location:     w.Location,
-		Forecast:     make([]Forecast, len(w.Keys)),
+		Location: w.Location,
+		Forecast: make([]Forecast, len(w.Keys)),
+	}
+
+	// Condition to symbol file
+	conditionSymbol := map[weather.Condition]string{
+		weather.ConditionSun:          "symbols/condition_sun.eps",
+		weather.ConditionCloud:        "symbols/condition_cloud.eps",
+		weather.ConditionRain:         "symbols/condition_rain.eps",
+		weather.ConditionSnow:         "symbols/condition_snow.eps",
+		weather.ConditionThunderstorm: "symbols/condition_thunderstorm.eps",
 	}
 
 	for i, key := range w.Keys {
@@ -65,7 +86,8 @@ func New(w weather.Weather) *JGraph {
 		f.Row = float32(len(w.Keys) - 1 - i)
 		f.Low = int(w.TemperatureLow[key])
 		f.High = int(w.TemperatureHigh[key])
-		f.TempBar = f.makeTempBar(j.LowCol, j.HighCol, int(w.MinTemperature), int(w.MaxTemperature))
+		f.TempBar = f.makeTempBar(j.LowCol+tempBarBuffer, j.HighCol-tempBarBuffer, int(w.MinTemperature), int(w.MaxTemperature))
+		f.Condition = conditionSymbol[w.Condition[key]]
 	}
 
 	return j
@@ -82,40 +104,39 @@ func (j *JGraph) Plot(file string) {
 		panic("Error creating output file: " + err.Error())
 	}
 
-	tmpl.Execute(f, j)
+	err = tmpl.Execute(f, j)
+	if err != nil {
+	    panic("Error executing template: " + err.Error())
+	}
 }
 
 // ALL BELOW CODED BY CLAUDE ..CHECK LATER!
-func (f *Forecast) makeTempBar(lowCol, highCol float32, minTemp, maxTemp int) []TempBar {
+func (f *Forecast) makeTempBar(lowCol, highCol float32, globalMin, globalMax int) []TempBar {
 	steps := 80
 	bars := make([]TempBar, steps)
-	stepSize := (highCol - lowCol) / float32(steps)
 
-	tempRange := float32(maxTemp - minTemp)
+	tempRange := float32(globalMax - globalMin)
 	xRange := highCol - lowCol
 
+	// X positions where this day's colored bar starts and ends
+	dayLowX := lowCol + (float32(f.Low-globalMin)/tempRange)*xRange
+	dayHighX := lowCol + (float32(f.High-globalMin)/tempRange)*xRange
+
+	stepSize := (dayHighX - dayLowX) / float32(steps)
+
 	for i := range steps {
-		x1 := lowCol + float32(i)*stepSize
+		x1 := dayLowX + float32(i)*stepSize
 		x2 := x1 + stepSize + 0.05
 
-		xNorm := (x1 - lowCol) / xRange
-		temp := float32(minTemp) + xNorm*tempRange
-
-		t := (temp - float32(minTemp)) / tempRange
+		// t is 0.0 at global min, 1.0 at global max
+		t := (x1 - lowCol) / xRange
 		if t < 0.0 {
 			t = 0.0
 		} else if t > 1.0 {
 			t = 1.0
 		}
 
-		var r, g, b float32
-		if temp < float32(f.Low) || temp > float32(f.High) {
-			// outside this day's range — gray
-			r, g, b = 0.4, 0.4, 0.4
-		} else {
-			r, g, b = tempToColor(t)
-		}
-
+		r, g, b := tempToColor(t)
 		bars[i] = TempBar{
 			R:     r,
 			G:     g,

@@ -101,19 +101,36 @@ func getWeatherFromOpenMeteo(lat, long string) *openMeteoResponse {
 func convertIsoTimesToStrings(times []int) []string {
 	today := time.Now()
 	timeStr := make([]string, len(times))
-	
+
 	for i, k := range times {
 		t := time.Unix(int64(k), 0)
-		
+
 		if t.Day() == today.Day() && t.Month() == today.Month() && t.Year() == today.Year() {
 			timeStr[i] = "Today"
 			continue
 		}
-		
+
 		timeStr[i] = t.Weekday().String()[:3]
 	}
 
 	return timeStr
+}
+
+func wmoCodeToCondition(code int) Condition {
+	switch {
+    case code == 0, code == 1:
+        return ConditionSun
+    case code == 2, code == 3, code == 45, code == 48:
+        return ConditionCloud
+    case code >= 51 && code <= 67, code >= 80 && code <= 82:
+        return ConditionRain
+    case code >= 71 && code <= 77, code == 85, code == 86:
+        return ConditionSnow
+    case code >= 95:
+        return ConditionThunderstorm
+    default:
+        return ConditionCloud
+    }
 }
 
 func (o *openMeteoResponse) toWeather() *Weather {
@@ -129,7 +146,7 @@ func (o *openMeteoResponse) toWeather() *Weather {
 	for i, key := range w.Keys {
 		w.TemperatureHigh[key] = o.Daily.Temperature2mMax[i]
 		w.TemperatureLow[key] = o.Daily.Temperature2mMin[i]
-		w.Condition[key] = Condition(o.Daily.WeatherCode[i])
+		w.Condition[key] = wmoCodeToCondition(o.Daily.WeatherCode[i])
 	}
 
 	return &w

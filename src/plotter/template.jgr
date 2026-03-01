@@ -1,20 +1,33 @@
 newgraph
 X 8.5
 Y 11
+x_translate 3
+y_translate 5
 
-xaxis min {{.XMin}} max {{.XMax}} nodraw (* 20 75 *)
-yaxis min {{.YMin}} max {{.YMax}} nodraw (* -0.5 9.5 *)
+xaxis min {{ .XMin }} max {{ .XMax }} nodraw
+yaxis min {{ .YMin }} max {{ .YMax }} nodraw
 
-title fontsize 14 font Helvetica-Bold : {{.Location}} Daily Forecast
+title fontsize 14 font Helvetica-Bold y {{ .TitleY }} : {{.Location}} Daily Forecast
 
+{{ $dayCol := .DayCol }}
+{{ $condCol := .ConditionCol }}
 {{ $lowCol := .LowCol }}
 {{ $highCol := .HighCol }}
+{{ $tempBarMin := .TempBarMin }}
+{{ $tempBarMax := .TempBarMax }}
+
 {{ range .Forecast }}
 {{ $row := .Row }}
+
+(* Gray underlying bar *)
+newcurve linetype solid linethickness 8 marktype none color 0.4 0.4 0.4 pts {{ $tempBarMin }} {{ $row }} {{ $tempBarMax }} {{ $row }}
+
 {{ range .TempBar }}
-newcurve linetype solid linethickness 8 marktype none color {{.R}} {{.G}} {{.B}} pts {{.Start}} {{$row}} {{.End}} {{$row}}
+newcurve linetype solid linethickness 8 marktype none color {{ .R }} {{ .G }} {{ .B }} pts {{ .Start }} {{ $row }} {{ .End }} {{ $row }}
 {{ end }}
-newstring x 19 y {{.Row}} hjr vjc fontsize 12 font Helvetica-Bold : {{.Key}}
-newstring x {{ $lowCol }} y {{.Row}} hjr vjc fontsize 10 font Helvetica : {{.Low}}
-newstring x {{ $highCol }} y {{.Row}} hjl vjc fontsize 10 font Helvetica : {{.High}}
+
+newstring x {{ $dayCol }} y {{ .Row }} hjr vjc fontsize 12 font Helvetica-Bold : {{ .Key }}
+newcurve eps {{ .Condition }} marksize 9 0.65 pts {{ $condCol }} {{ .Row }}
+newstring x {{ $lowCol }} y {{ .Row }} hjr vjc fontsize 10 font Helvetica : {{ .Low }}
+newstring x {{ $highCol }} y {{ .Row }} hjl vjc fontsize 10 font Helvetica : {{ .High }}
 {{ end }}
