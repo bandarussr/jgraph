@@ -6,7 +6,7 @@ import (
 	"net/url"
 )
 
-const dev = true
+const dev = false
 
 type Weather struct {
 	Location        string

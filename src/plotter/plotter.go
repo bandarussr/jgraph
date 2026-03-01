@@ -93,18 +93,13 @@ func New(w weather.Weather) *JGraph {
 	return j
 }
 
-func (j *JGraph) Plot(file string) {
+func (j *JGraph) Plot() {
 	tmpl, err := template.New("jgraph").Parse(jgr_template)
 	if err != nil {
 		panic("Error parsing template: " + err.Error())
 	}
 
-	f, err := os.Create(file)
-	if err != nil {
-		panic("Error creating output file: " + err.Error())
-	}
-
-	err = tmpl.Execute(f, j)
+	err = tmpl.Execute(os.Stdout, j)
 	if err != nil {
 	    panic("Error executing template: " + err.Error())
 	}

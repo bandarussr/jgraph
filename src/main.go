@@ -19,5 +19,5 @@ func main() {
 	
 	// Create jgraph view.
 	j := plotter.New(*w)
-	j.Plot("test.jgr")
+	j.Plot()
 }
