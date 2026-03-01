@@ -13,15 +13,6 @@ import (
 )
 
 type openMeteoResponse struct {
-	// Hourly struct {
-	// Time                      []int     `json:"time"`
-	// 	Temperature2m            []float32 `json:"temperature_2m"`
-	// 	RelativeHumidity2m       []int     `json:"relative_humidity_2m"`
-	// 	PrecipitationProbability []int     `json:"precipitation_probability"`
-	// 	WeatherCode              []int     `json:"weather_code"`
-	// 	WindSpeed10m             []float32 `json:"wind_speed_10m"`
-	// 	WindDirection10m         []int     `json:"wind_direction_10m"`
-	// } `json:"hourly"`
 	Daily struct {
 		Time                        []int     `json:"time"`
 		WeatherCode                 []int     `json:"weather_code"`
@@ -71,16 +62,6 @@ func getWeatherFromOpenMeteo(lat, long string) *openMeteoResponse {
 		"wind_direction_10m_dominant",
 	}
 	q.Set("daily", strings.Join(daily, ","))
-
-	// hourly := []string{
-	// 	"temperature_2m",
-	// 	"relative_humidity_2m",
-	// 	"precipitation_probability",
-	// 	"weather_code",
-	// 	"wind_speed_10m",
-	// 	"wind_direction_10m",
-	// }
-	// q.Set("hourly", strings.Join(hourly, ","))
 	u.RawQuery = q.Encode()
 
 	// Make request.
@@ -117,7 +98,7 @@ func getWeatherFromOpenMeteo(lat, long string) *openMeteoResponse {
 	return &weather
 }
 
-func convertIsoTimesToStrings(times []int, f ForecastType) []string {
+func convertIsoTimesToStrings(times []int) []string {
 	today := time.Now()
 	timeStr := make([]string, len(times))
 	
@@ -137,7 +118,7 @@ func convertIsoTimesToStrings(times []int, f ForecastType) []string {
 
 func (o *openMeteoResponse) toWeather() *Weather {
 	w := Weather{
-		Keys:            convertIsoTimesToStrings(o.Daily.Time, ForecastDaily),
+		Keys:            convertIsoTimesToStrings(o.Daily.Time),
 		MinTemperature:  slices.Min(o.Daily.Temperature2mMin),
 		MaxTemperature:  slices.Max(o.Daily.Temperature2mMax),
 		TemperatureHigh: make(map[string]float32),

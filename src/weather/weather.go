@@ -28,14 +28,7 @@ const (
 	ConditionThunderstorm
 )
 
-type ForecastType int
-
-const (
-	ForecastDaily ForecastType = iota
-	ForecastHourly
-)
-
-func New(lat, long string, f ForecastType) *Weather {
+func New(lat, long string) *Weather {
 	w := getWeatherFromOpenMeteo(lat, long).toWeather()
 	w.Location = getLocationName(lat, long)
 	return w

@@ -5,7 +5,7 @@ Y 11
 xaxis min {{.XMin}} max {{.XMax}} nodraw (* 20 75 *)
 yaxis min {{.YMin}} max {{.YMax}} nodraw (* -0.5 9.5 *)
 
-title fontsize 14 font Helvetica-Bold : {{.Location}} {{.ForecastType}} Forecast
+title fontsize 14 font Helvetica-Bold : {{.Location}} Daily Forecast
 
 {{ $lowCol := .LowCol }}
 {{ $highCol := .HighCol }}

@@ -26,7 +26,6 @@ type JGraph struct {
 	HighCol float32
 
 	Location     string
-	ForecastType string
 	Forecast     []Forecast
 }
 
@@ -57,7 +56,6 @@ func New(w weather.Weather) *JGraph {
 		HighCol: 69,
 
 		Location:     w.Location,
-		ForecastType: "Daily",
 		Forecast:     make([]Forecast, len(w.Keys)),
 	}
 
@@ -104,7 +102,11 @@ func (f *Forecast) makeTempBar(lowCol, highCol float32, minTemp, maxTemp int) []
 		temp := float32(minTemp) + xNorm*tempRange
 
 		t := (temp - float32(minTemp)) / tempRange
-		t = clamp(t, 0.0, 1.0)
+		if t < 0.0 {
+			t = 0.0
+		} else if t > 1.0 {
+			t = 1.0
+		}
 
 		var r, g, b float32
 		if temp < float32(f.Low) || temp > float32(f.High) {
@@ -148,14 +150,4 @@ func tempToColor(t float32) (r, g, b float32) {
 
 	last := stops[len(stops)-1]
 	return last[1], last[2], last[3]
-}
-
-func clamp(v, min, max float32) float32 {
-	if v < min {
-		return min
-	}
-	if v > max {
-		return max
-	}
-	return v
 }
