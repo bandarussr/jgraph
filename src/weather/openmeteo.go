@@ -18,9 +18,6 @@ type openMeteoResponse struct {
 		WeatherCode                 []int     `json:"weather_code"`
 		Temperature2mMin            []float32 `json:"temperature_2m_min"`
 		Temperature2mMax            []float32 `json:"temperature_2m_max"`
-		PrecipitationProbabilityMax []int     `json:"precipitation_probability_max"`
-		WindSpeed10mMax             []float32 `json:"wind_speed_10m_max"`
-		WindDirection10mDominant    []int     `json:"wind_direction_10m_dominant"`
 	} `json:"daily"`
 }
 
@@ -57,9 +54,6 @@ func getWeatherFromOpenMeteo(lat, long string) *openMeteoResponse {
 		"weather_code",
 		"temperature_2m_min",
 		"temperature_2m_max",
-		"precipitation_probability_max",
-		"wind_speed_10m_max",
-		"wind_direction_10m_dominant",
 	}
 	q.Set("daily", strings.Join(daily, ","))
 	u.RawQuery = q.Encode()
