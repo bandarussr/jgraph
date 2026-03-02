@@ -105,7 +105,6 @@ func (j *JGraph) Plot() {
 	}
 }
 
-// ALL BELOW CODED BY CLAUDE ..CHECK LATER!
 func (f *Forecast) makeTempBar(lowCol, highCol float32, globalMin, globalMax int) []TempBar {
 	steps := 80
 	bars := make([]TempBar, steps)
@@ -144,7 +143,6 @@ func (f *Forecast) makeTempBar(lowCol, highCol float32, globalMin, globalMax int
 	return bars
 }
 
-// Magic color gradient, no clue how this works.
 func tempToColor(t float32) (r, g, b float32) {
 	stops := [][4]float32{
 		{0.0, 0.3, 0.7, 0.95},   // blue
